@@ -28,7 +28,7 @@
 **/
 
 angular.module('ngAutocomplete', [])
-  .directive('ngAutocomplete', function() {
+  .directive('ngAutocomplete', function($window) {
     return {
       require: 'ngModel',
       scope: {
@@ -38,65 +38,53 @@ angular.module('ngAutocomplete', [])
       },
 
       link: function(scope, element, attrs, controller) {
+        $window.ngAutocompleteCallback = function () {
+          scope.gPlace = new google.maps.places.Autocomplete(element[0], {});
 
-        //options for autocomplete
-        var opts;
+          google.maps.event.addListener(scope.gPlace, 'place_changed', function() {
+            var result = scope.gPlace.getPlace() || false;
+            if (result && result.address_components !== undefined) {
+              scope.$apply(function() {
+                scope.details = result;
+                controller.$setViewValue(element.val());
+              });
+            } else if (result && watchEnter) {
+              getPlace(result);
+            }
+          });
+        };
+
+        var tag = angular.element('<script></script>');
+        tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&sensor=false&callback=ngAutocompleteCallback';
+        element.append(tag);
+
         var watchEnter = false;
-        //convert options provided to opts
-        var initOpts = function() {
 
-          opts = {};
-          if (scope.options) {
+        var initOpts = function(options) {
+          options = angular.extend({
+            bounds: null,
+            country: null,
+            types: ''
+          }, options);
 
-            watchEnter = scope.options.watchEnter === true;
+          if (options) {
+            watchEnter = options.watchEnter === true;
 
-            if (scope.options.types) {
-              opts.types = [];
-              opts.types.push(scope.options.types);
-              scope.gPlace.setTypes(opts.types);
-            } else {
-              scope.gPlace.setTypes([]);
-            }
-
-            if (scope.options.bounds) {
-              opts.bounds = scope.options.bounds;
-              scope.gPlace.setBounds(opts.bounds);
-            } else {
-              scope.gPlace.setBounds(null);
-            }
-
-            if (scope.options.country) {
-              opts.componentRestrictions = {
-                country: scope.options.country
+            var componentRestrictions = null;
+            if (options.country) {
+              componentRestrictions = {
+                country: options.country
               };
-              scope.gPlace.setComponentRestrictions(opts.componentRestrictions);
-            } else {
-              scope.gPlace.setComponentRestrictions(null);
+            }
+            if (scope.gPlace !== undefined) {
+              scope.gPlace.setTypes([options.types]);
+              scope.gPlace.setBounds(options.bounds);
+              scope.gPlace.setComponentRestrictions(componentRestrictions);
             }
           }
         };
 
-        if (scope.gPlace === undefined) {
-          scope.gPlace = new google.maps.places.Autocomplete(element[0], {});
-        }
-        google.maps.event.addListener(scope.gPlace, 'place_changed', function() {
-          var result = scope.gPlace.getPlace();
-          if (result !== undefined) {
-            if (result.address_components !== undefined) {
-
-              scope.$apply(function() {
-
-                scope.details = result;
-
-                controller.$setViewValue(element.val());
-              });
-            } else if (watchEnter) {
-                getPlace(result);
-            }
-          }
-        });
-
-        //function to get retrieve the autocompletes first result using the AutocompleteService 
+        //function to get retrieve the autocompletes first result using the AutocompleteService
         var getPlace = function(result) {
           var autocompleteService = new google.maps.places.AutocompleteService();
           if (result.name.length > 0){
@@ -107,28 +95,26 @@ angular.module('ngAutocomplete', [])
               },
               function listentoresult(list) {
                 if(list === null || list.length === 0) {
-
                   scope.$apply(function() {
                     scope.details = null;
                   });
-
                 } else {
                   var placesService = new google.maps.places.PlacesService(element[0]);
                   placesService.getDetails(
                     {'reference': list[0].reference},
                     function detailsresult(detailsResult, placesServiceStatus) {
+                      var formattedAddress = detailsResult.formatted_address;
 
                       if (placesServiceStatus === google.maps.GeocoderStatus.OK) {
                         scope.$apply(function() {
-
-                          controller.$setViewValue(detailsResult.formatted_address);
-                          element.val(detailsResult.formatted_address);
+                          controller.$setViewValue(formattedAddress);
+                          element.val(formattedAddress);
 
                           scope.details = detailsResult;
 
                           //on focusout the value reverts, need to set it again.
                           element.on('focusout', function() {
-                            element.val(detailsResult.formatted_address);
+                            element.val(formattedAddress);
                             element.unbind('focusout');
                           });
 
@@ -150,10 +136,7 @@ angular.module('ngAutocomplete', [])
         scope.watchOptions = function () {
           return scope.options;
         };
-        scope.$watch(scope.watchOptions, function () {
-          initOpts();
-        }, true);
-
+        scope.$watch(scope.watchOptions, initOpts, true);
       }
     };
   });
