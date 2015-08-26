@@ -27,7 +27,7 @@
  *    }
 **/
 
-angular.module( "ngAutocomplete", [])
+angular.module('ngAutocomplete', [])
   .directive('ngAutocomplete', function() {
     return {
       require: 'ngModel',
@@ -40,47 +40,43 @@ angular.module( "ngAutocomplete", [])
       link: function(scope, element, attrs, controller) {
 
         //options for autocomplete
-        var opts
-        var watchEnter = false
+        var opts;
+        var watchEnter = false;
         //convert options provided to opts
         var initOpts = function() {
 
-          opts = {}
+          opts = {};
           if (scope.options) {
 
-            if (scope.options.watchEnter !== true) {
-              watchEnter = false
-            } else {
-              watchEnter = true
-            }
+            watchEnter = scope.options.watchEnter === true;
 
             if (scope.options.types) {
-              opts.types = []
-              opts.types.push(scope.options.types)
-              scope.gPlace.setTypes(opts.types)
+              opts.types = [];
+              opts.types.push(scope.options.types);
+              scope.gPlace.setTypes(opts.types);
             } else {
-              scope.gPlace.setTypes([])
+              scope.gPlace.setTypes([]);
             }
 
             if (scope.options.bounds) {
-              opts.bounds = scope.options.bounds
-              scope.gPlace.setBounds(opts.bounds)
+              opts.bounds = scope.options.bounds;
+              scope.gPlace.setBounds(opts.bounds);
             } else {
-              scope.gPlace.setBounds(null)
+              scope.gPlace.setBounds(null);
             }
 
             if (scope.options.country) {
               opts.componentRestrictions = {
                 country: scope.options.country
-              }
-              scope.gPlace.setComponentRestrictions(opts.componentRestrictions)
+              };
+              scope.gPlace.setComponentRestrictions(opts.componentRestrictions);
             } else {
-              scope.gPlace.setComponentRestrictions(null)
+              scope.gPlace.setComponentRestrictions(null);
             }
           }
-        }
+        };
 
-        if (scope.gPlace == undefined) {
+        if (scope.gPlace === undefined) {
           scope.gPlace = new google.maps.places.Autocomplete(element[0], {});
         }
         google.maps.event.addListener(scope.gPlace, 'place_changed', function() {
@@ -94,14 +90,11 @@ angular.module( "ngAutocomplete", [])
 
                 controller.$setViewValue(element.val());
               });
-            }
-            else {
-              if (watchEnter) {
-                getPlace(result)
-              }
+            } else if (watchEnter) {
+                getPlace(result);
             }
           }
-        })
+        });
 
         //function to get retrieve the autocompletes first result using the AutocompleteService 
         var getPlace = function(result) {
@@ -112,8 +105,8 @@ angular.module( "ngAutocomplete", [])
                 input: result.name,
                 offset: result.name.length
               },
-              function listentoresult(list, status) {
-                if(list == null || list.length == 0) {
+              function listentoresult(list) {
+                if(list === null || list.length === 0) {
 
                   scope.$apply(function() {
                     scope.details = null;
@@ -125,7 +118,7 @@ angular.module( "ngAutocomplete", [])
                     {'reference': list[0].reference},
                     function detailsresult(detailsResult, placesServiceStatus) {
 
-                      if (placesServiceStatus == google.maps.GeocoderStatus.OK) {
+                      if (placesServiceStatus === google.maps.GeocoderStatus.OK) {
                         scope.$apply(function() {
 
                           controller.$setViewValue(detailsResult.formatted_address);
@@ -134,10 +127,10 @@ angular.module( "ngAutocomplete", [])
                           scope.details = detailsResult;
 
                           //on focusout the value reverts, need to set it again.
-                          var watchFocusOut = element.on('focusout', function(event) {
+                          element.on('focusout', function() {
                             element.val(detailsResult.formatted_address);
-                            element.unbind('focusout')
-                          })
+                            element.unbind('focusout');
+                          });
 
                         });
                       }
@@ -146,7 +139,7 @@ angular.module( "ngAutocomplete", [])
                 }
               });
           }
-        }
+        };
 
         controller.$render = function () {
           var location = controller.$viewValue;
@@ -155,10 +148,10 @@ angular.module( "ngAutocomplete", [])
 
         //watch options provided to directive
         scope.watchOptions = function () {
-          return scope.options
+          return scope.options;
         };
         scope.$watch(scope.watchOptions, function () {
-          initOpts()
+          initOpts();
         }, true);
 
       }
