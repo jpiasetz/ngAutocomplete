@@ -55,7 +55,7 @@ angular.module('ngAutocomplete', [])
         };
 
         var tag = angular.element('<script></script>');
-        tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&sensor=false&callback=ngAutocompleteCallback';
+        tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&callback=ngAutocompleteCallback';
         element.append(tag);
 
         var watchEnter = false;
