@@ -38,7 +38,7 @@ angular.module('ngAutocomplete', [])
       },
 
       link: function(scope, element, attrs, controller) {
-        $window.ngAutocompleteCallback = function () {
+        var cb = function () {
           scope.gPlace = new google.maps.places.Autocomplete(element[0], {});
 
           google.maps.event.addListener(scope.gPlace, 'place_changed', function() {
@@ -54,9 +54,14 @@ angular.module('ngAutocomplete', [])
           });
         };
 
-        var tag = angular.element('<script></script>');
-        tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&callback=ngAutocompleteCallback';
-        element.append(tag);
+        if ($window.google) {
+          cb();
+        } else {
+          $window.ngAutocompleteCallback = cb;
+          var tag = angular.element('<script></script>');
+          tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&callback=ngAutocompleteCallback';
+          element.append(tag);
+        }
 
         var watchEnter = false;
 
