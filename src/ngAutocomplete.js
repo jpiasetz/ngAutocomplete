@@ -56,9 +56,21 @@ angular.module('ngAutocomplete', [])
 
         var watchEnter = false;
 
+
+        if ($window.google) {
+          cb();
+        } else {
+          $window.ngAutocompleteCallback = cb;
+          var tag = angular.element('<script></script>');
+          tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&callback=ngAutocompleteCallback';
+          if (scope.options && scope.options.googleApiKey) {
+            tag[0].src += '&key=' + scope.options.googleApiKey;
+          }
+          element.append(tag);
+        }
+
         var initOpts = function(options) {
           options = angular.extend({
-            googleApiKey: null,
             bounds: null,
             country: null,
             types: ''
@@ -77,17 +89,6 @@ angular.module('ngAutocomplete', [])
               scope.gPlace.setTypes([options.types]);
               scope.gPlace.setBounds(options.bounds);
               scope.gPlace.setComponentRestrictions(componentRestrictions);
-            }
-            if (options.googleApiKey) {
-              if ($window.google) {
-                cb();
-              } else {
-                $window.ngAutocompleteCallback = cb;
-                var tag = angular.element('<script></script>');
-                tag[0].src ='https://maps.googleapis.com/maps/api/js?libraries=places&callback=ngAutocompleteCallback';
-                tag[0].src += '&key=' + options.googleApiKey;
-                element.append(tag);
-              }
             }
           }
         };
