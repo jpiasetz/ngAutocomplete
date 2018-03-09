@@ -41,6 +41,10 @@ angular.module('ngAutocomplete', [])
         var cb = function () {
           scope.gPlace = new google.maps.places.Autocomplete(element[0], {});
 
+          if (scope.options) {
+            initOpts(scope.options);
+          }
+          
           google.maps.event.addListener(scope.gPlace, 'place_changed', function() {
             var result = scope.gPlace.getPlace() || false;
             if (result && result.address_components !== undefined) {
@@ -55,7 +59,6 @@ angular.module('ngAutocomplete', [])
         };
 
         var watchEnter = false;
-
 
         if ($window.google) {
           cb();
@@ -86,9 +89,15 @@ angular.module('ngAutocomplete', [])
               };
             }
             if (scope.gPlace !== undefined) {
-              scope.gPlace.setTypes([options.types]);
-              scope.gPlace.setBounds(options.bounds);
-              scope.gPlace.setComponentRestrictions(componentRestrictions);
+              if (options.types) {
+                scope.gPlace.setTypes([options.types]);
+              }
+              if (options.bounds) {
+                scope.gPlace.setBounds(options.bounds);
+              }
+              if (componentRestrictions) {
+                scope.gPlace.setComponentRestrictions(componentRestrictions);
+              }
             }
           }
         };
