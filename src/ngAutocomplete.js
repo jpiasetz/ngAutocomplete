@@ -38,6 +38,36 @@ angular.module('ngAutocomplete', [])
       },
 
       link: function(scope, element, attrs, controller) {
+        var initOpts = function(options) {
+          options = angular.extend({
+            bounds: null,
+            country: null,
+            types: ''
+          }, options);
+
+          if (options) {
+            watchEnter = options.watchEnter === true;
+
+            var componentRestrictions = null;
+            if (options.country) {
+              componentRestrictions = {
+                country: options.country
+              };
+            }
+            if (scope.gPlace !== undefined) {
+              if (options.types) {
+                scope.gPlace.setTypes([options.types]);
+              }
+              if (options.bounds) {
+                scope.gPlace.setBounds(options.bounds);
+              }
+              if (componentRestrictions) {
+                scope.gPlace.setComponentRestrictions(componentRestrictions);
+              }
+            }
+          }
+        };
+        
         var cb = function () {
           scope.gPlace = new google.maps.places.Autocomplete(element[0], {});
 
@@ -71,36 +101,6 @@ angular.module('ngAutocomplete', [])
           }
           element.append(tag);
         }
-
-        var initOpts = function(options) {
-          options = angular.extend({
-            bounds: null,
-            country: null,
-            types: ''
-          }, options);
-
-          if (options) {
-            watchEnter = options.watchEnter === true;
-
-            var componentRestrictions = null;
-            if (options.country) {
-              componentRestrictions = {
-                country: options.country
-              };
-            }
-            if (scope.gPlace !== undefined) {
-              if (options.types) {
-                scope.gPlace.setTypes([options.types]);
-              }
-              if (options.bounds) {
-                scope.gPlace.setBounds(options.bounds);
-              }
-              if (componentRestrictions) {
-                scope.gPlace.setComponentRestrictions(componentRestrictions);
-              }
-            }
-          }
-        };
 
         //function to get retrieve the autocompletes first result using the AutocompleteService
         var getPlace = function(result) {
